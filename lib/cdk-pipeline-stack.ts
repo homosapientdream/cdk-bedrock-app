@@ -1,7 +1,7 @@
-import * as cdk from "aws-cdk-lib";
-import { Construct } from "constructs";
-import * as pipelines from "aws-cdk-lib/pipelines";
-import { CdkBedrockAppStack } from "./cdk-bedrock-app-stack";
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as pipelines from 'aws-cdk-lib/pipelines';
+import { CdkBedrockAppStack } from './cdk-bedrock-app-stack';
 
 /**
  * This deploys a Cloudformation Stack for configuring AWS CodePipeline.
@@ -17,12 +17,12 @@ export class CdkPipelineStack extends cdk.Stack {
      * Then you also need to add that as plaintext inside of AWS SecretsManager.
      * Make sure to make the strings match.
      */
-    const githubAccessToken = cdk.SecretValue.secretsManager("github-token");
+    const githubAccessToken = cdk.SecretValue.secretsManager('github-token');
     const cdkDefaultAccount = cdk.SecretValue.secretsManager(
-      "cdk-default-account"
+      'cdk-default-account'
     ).unsafeUnwrap();
-    const cdkDefaultRegion = "us-east-1";
-    const githubRepo = "Alexander-Infante/cdk-bedrock-app";
+    const cdkDefaultRegion = 'us-east-1';
+    const githubRepo = 'homosapientdream/cdk-bedrock-app';
 
     /**
      * This CodePipeline does a few steps in the code below
@@ -32,13 +32,13 @@ export class CdkPipelineStack extends cdk.Stack {
      * 3. Check out the root package.json to see the custom scripts, just to make life easier.
      */
 
-    const pipeline = new pipelines.CodePipeline(this, "CdkCodePipeline", {
-      pipelineName: "CdkCodePipeline",
-      synth: new pipelines.ShellStep("Synth", {
-        input: pipelines.CodePipelineSource.gitHub(githubRepo, "main", {
+    const pipeline = new pipelines.CodePipeline(this, 'CdkCodePipeline', {
+      pipelineName: 'CdkCodePipeline',
+      synth: new pipelines.ShellStep('Synth', {
+        input: pipelines.CodePipelineSource.gitHub(githubRepo, 'main', {
           authentication: githubAccessToken,
         }),
-        commands: ["npm i", "npm run build-all", "npx cdk synth"],
+        commands: ['npm i', 'npm run build-all', 'npx cdk synth'],
       }),
     });
 
@@ -48,15 +48,15 @@ export class CdkPipelineStack extends cdk.Stack {
      * This step AUTOMATICALLY deploys
      */
 
-    const devStage = new cdk.Stage(this, "DevStage");
-    const cdkBedrockDev = new CdkBedrockAppStack(devStage, "CDKBedrock-Dev", {
+    const devStage = new cdk.Stage(this, 'DevStage');
+    const cdkBedrockDev = new CdkBedrockAppStack(devStage, 'CDKBedrock-Dev', {
       env: {
         account: cdkDefaultAccount,
         region: cdkDefaultRegion,
       },
-      stackName: "CDKBedrock-Dev",
-      description: "Querying AWS Bedrock Stack - Dev",
-      stageName: "dev",
+      stackName: 'CDKBedrock-Dev',
+      description: 'Querying AWS Bedrock Stack - Dev',
+      stageName: 'dev',
     });
 
     pipeline.addStage(devStage);
@@ -67,23 +67,23 @@ export class CdkPipelineStack extends cdk.Stack {
      * This step needs MANUAL APPROVAL inside of the AWS CodePipeline console to deploy
      */
 
-    const prodStage = new cdk.Stage(this, "ProductionStage");
+    const prodStage = new cdk.Stage(this, 'ProductionStage');
     const cdkBedrockProd = new CdkBedrockAppStack(
       prodStage,
-      "CDKBedrock-Prod",
+      'CDKBedrock-Prod',
       {
         env: {
           account: cdkDefaultAccount,
           region: cdkDefaultRegion,
         },
-        stackName: "CDKBedrock-Prod",
-        description: "Querying AWS Bedrock Stack - Prod",
-        stageName: "production",
+        stackName: 'CDKBedrock-Prod',
+        description: 'Querying AWS Bedrock Stack - Prod',
+        stageName: 'production',
       }
     );
 
     pipeline.addStage(prodStage, {
-      pre: [new pipelines.ManualApprovalStep("PromoteToProd")],
+      pre: [new pipelines.ManualApprovalStep('PromoteToProd')],
     });
   }
 }
